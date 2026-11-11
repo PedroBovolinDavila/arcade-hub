@@ -2,9 +2,9 @@
   {
     "id": "coringa",
     "name": "CORINGA",
-    "description": "O catálogo já possui o cadastro do Coringa. O módulo do jogo será conectado em games/coringa/index.html na próxima etapa.",
-    "shortDescription": "Módulo do jogo aguardando transferência.",
-    "status": "EM PREPARAÇÃO",
+    "description": "Um roguelike de pôquer com cartas, coringas, combinações e estratégia. Supere as blinds, construa sua partida e avance pelos Antes.",
+    "shortDescription": "Roguelike de pôquer, combinações e estratégia.",
+    "status": "DISPONÍVEL",
     "number": "001",
     "path": "games/coringa/index.html",
     "kind": "cards",
