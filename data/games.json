@@ -1,0 +1,14 @@
+[
+  {
+    "id": "coringa",
+    "name": "CORINGA",
+    "description": "O catálogo já possui o cadastro do Coringa. O módulo do jogo será conectado em games/coringa/index.html na próxima etapa.",
+    "shortDescription": "Módulo do jogo aguardando transferência.",
+    "status": "EM PREPARAÇÃO",
+    "number": "001",
+    "path": "games/coringa/index.html",
+    "kind": "cards",
+    "players": 1,
+    "cover": null
+  }
+]

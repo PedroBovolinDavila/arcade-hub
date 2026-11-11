@@ -1,1 +1,145 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#170d20">
+  <meta name="description" content="Um salão de jogos 3D com um catálogo simples, rápido e preparado para crescer." />
+  <meta name="theme-color" content="#170d20">
+  <link rel="icon" type="image/svg+xml" href="assets/ui/salon-icon.svg">
+  <link rel="manifest" href="manifest.webmanifest">
+  <title>O Salão — Fliperama</title>
+  <link rel="stylesheet" href="assets/css/salon.css">
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.1/dist/gsap.min.js"></script>
+  <script>
+    window.__salonBooted = false;
+    setTimeout(() => {
+      if (!window.__salonBooted) {
+        const loader = document.getElementById('loader');
+        const message = document.getElementById('webgl-error');
+        if (loader) loader.classList.add('done');
+        if (message) {
+          message.style.display = 'flex';
+          message.innerHTML = 'Não foi possível iniciar o ambiente 3D.<br>Verifique se o navegador oferece suporte a WebGL e se a rede permite carregar Three.js pelo CDN.';
+        }
+      }
+    }, 12000);
+  </script>
+  <script type="importmap">
+    {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js"}}
+  </script>
+</head>
+<body>
+  <div id="world" aria-label="Salão de jogos tridimensional"></div>
+  <div id="crt"></div><div id="grain"></div><div id="vignette"></div>
+  <div class="corner-mark tl"></div><div class="corner-mark tr"></div><div class="corner-mark bl"></div><div class="corner-mark br"></div>
 
+  <header class="ui topbar">
+    <div class="brand" aria-label="O Salão">
+      <div class="brand-mark"><span></span></div>
+      <div class="brand-copy"><b>O SALÃO</b><small>CASA DE JOGOS · DESDE 1987</small></div>
+    </div>
+    <nav class="nav" aria-label="Navegação do salão">
+      <button class="active" data-area="lobby" aria-current="page">SALÃO</button>
+      <button data-area="arcade">ARCADE</button>
+      <button data-area="tables">MESAS / CONVIVÊNCIA</button>
+      <button class="nav-catalog" id="open-catalog">CATÁLOGO <span>↗</span></button>
+    </nav>
+    <div class="status"><span class="status-dot"></span> PORTAS ABERTAS</div>
+  </header>
+
+  <div class="ui hotspot-layer" id="hotspot-layer" aria-label="Pontos interativos do salão">
+    <button class="hotspot-marker" data-hotspot="arcade" aria-label="Explorar a área Arcade"><span class="marker-pin">▣</span><span class="marker-copy"><b>FLIPERAMAS</b><small>MÁQUINAS CLÁSSICAS</small></span></button>
+    <button class="hotspot-marker" data-hotspot="table" aria-label="Explorar a área das mesas"><span class="marker-pin">♠</span><span class="marker-copy"><b>MESAS DE CONVIVÊNCIA</b><small>ESPAÇO PARA JOGAR JUNTOS</small></span></button>
+  </div>
+
+  <section class="ui scene-kicker" id="scene-intro" aria-live="polite">
+    <div class="overline" id="scene-overline">O SALÃO / RECEPÇÃO</div>
+    <h1 id="scene-title">ENTRE.<br>ESCOLHA.<br>JOGUE.</h1>
+    <p id="scene-description">Um salão para descobrir jogos, reunir pessoas e começar novas partidas.</p>
+    <div class="scene-actions">
+      <button class="primary" id="scene-open-catalog">ABRIR CATÁLOGO <span>↗</span></button>
+      <button class="secondary" id="scene-explore">EXPLORAR O SALÃO</button>
+    </div>
+    <div class="ornament"></div>
+  </section>
+  <div class="ui hint" id="scene-hint"><strong id="hint-title">ESCOLHA SEU CAMINHO</strong><span id="hint-description">Selecione uma área no alto ou toque em um dos pontos iluminados no salão.</span></div>
+
+  <aside class="ui selection hidden" id="selection" aria-live="polite" aria-labelledby="selection-title" aria-hidden="true" inert>
+    <div class="eyebrow"><span id="selection-type">MÁQUINA · 001</span><span id="selection-state">● DISPONÍVEL</span></div>
+    <h2 id="selection-title">CORINGA</h2>
+    <p id="selection-description">Um jogo de cartas, combinações e estratégia. Sua primeira parada no salão.</p>
+    <div class="selection-meta" id="selection-meta">JOGO INDIVIDUAL <span>·</span> ESTRATÉGIA</div>
+    <div class="actions">
+      <button class="primary" id="selection-action">ENTRAR NO JOGO ↗</button>
+      <button class="secondary" id="selection-back" type="button">VOLTAR AO SALÃO</button>
+    </div>
+  </aside>
+
+  <div class="ui bottom-left" id="control-hints">
+    <div class="control"><span class="key">CLIQUE</span> INTERAGIR</div>
+    <div class="control"><span class="key">ESC</span> VOLTAR</div>
+    <div class="control"><span class="key">1–3</span> ÁREAS</div>
+  </div>
+  <div class="ui bottom-right"><b id="footer-state">O SALÃO ESTÁ ABERTO</b><span id="footer-hint">ESCOLHA UMA ÁREA PARA COMEÇAR</span></div>
+  <div class="touch-explore-guide" id="touch-explore-guide"><span class="gesture">↔</span><span>ARRASTE PARA OLHAR AO REDOR</span><button id="camera-reset" type="button" aria-label="Centralizar a câmera" title="Centralizar a câmera">↺</button></div>
+  <div class="ui mobile-shortcuts" id="mobile-shortcuts">
+    <button class="mobile-catalog-cta" id="mobile-open-catalog"><span>ABRIR CATÁLOGO</span><b>↗</b></button>
+    <div class="mobile-area-links" aria-label="Explorar áreas do salão">
+      <button data-area="arcade">ARCADE</button>
+      <button data-area="tables">MESAS / CONVIVÊNCIA</button>
+    </div>
+  </div>
+  <nav class="ui mobile-dock" aria-label="Navegação principal">
+    <button class="active" data-area="lobby"><span>⌂</span><small>SALÃO</small></button>
+    <button id="mobile-dock-catalog"><span>▤</span><small>CATÁLOGO</small></button>
+  </nav>
+  <div id="toast" role="status"></div>
+
+  <section id="catalog-screen" aria-hidden="true" aria-label="Catálogo de jogos">
+    <div class="catalog-shell">
+      <header class="catalog-head">
+        <div class="catalog-brandline"><span class="catalog-emblem">✦</span><span>O SALÃO <i>/</i> BIBLIOTECA</span></div>
+        <div class="catalog-title-row">
+          <div>
+            <div class="catalog-overline">A PRÓXIMA PARTIDA COMEÇA AQUI</div>
+            <h2>CATÁLOGO <span>DE JOGOS</span></h2>
+            <p>Escolha um jogo e entre na partida.</p>
+          </div>
+          <button class="catalog-close" id="catalog-close" type="button" aria-label="Voltar ao salão"><span>←</span> VOLTAR AO SALÃO</button>
+        </div>
+      </header>
+      <main class="catalog-main" id="catalog-main">
+        <div class="catalog-toolbar">
+          <label class="catalog-search" for="game-search">
+            <span class="search-symbol">⌕</span>
+            <input id="game-search" type="search" placeholder="Buscar um jogo pelo nome..." autocomplete="off" spellcheck="false">
+            <kbd>/</kbd>
+          </label>
+          <div class="catalog-count"><strong id="catalog-result-count">0 JOGOS</strong><span id="catalog-result-caption">NO CATÁLOGO</span></div>
+        </div>
+        <div class="game-grid" id="game-grid" aria-live="polite"></div>
+        <div class="catalog-empty" id="catalog-empty" hidden>
+          <span>⌕</span><h3>NENHUM JOGO ENCONTRADO</h3><p>Tente outro nome ou limpe a busca.</p>
+          <button id="clear-game-search">LIMPAR BUSCA</button>
+        </div>
+        <footer class="catalog-foot"><span>CASA DE JOGOS · DESDE 1987</span><span>ACERVO EM EXPANSÃO <b>✦</b></span></footer>
+      </main>
+      <section class="game-detail-view" id="game-detail-view" hidden aria-live="polite"></section>
+    </div>
+  </section>
+
+  <section id="game-modal" aria-label="Jogo Coringa" aria-hidden="true">
+    <div class="game-shell">
+      <div class="game-head"><strong>O SALÃO <span style="color:#87644e">/</span> CORINGA</strong><div class="game-controls"><button id="game-fullscreen">TELA CHEIA ⛶</button><button id="game-close" type="button">VOLTAR AO SALÃO ✕</button></div></div>
+      <iframe class="game-frame" id="game-frame" title="Jogo Coringa" src="about:blank" allow="fullscreen; autoplay" loading="lazy"></iframe>
+      <div id="fallback">O módulo do Coringa ainda não foi encontrado.<br>Confira se o arquivo está em <code>games/coringa/index.html</code>.</div>
+    </div>
+  </section>
+  <div id="loader"><div class="loader-symbol"></div><span>ABRINDO AS PORTAS DO SALÃO</span></div>
+  <div id="webgl-error">Este salão precisa de WebGL para renderizar o ambiente 3D.<br>Experimente abrir em um navegador atualizado com aceleração gráfica habilitada.</div>
+
+  <script type="module" src="assets/js/salon.js"></script>
+  <script>if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));</script>
+</body>
+</html>
