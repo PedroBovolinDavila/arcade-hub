@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tons</title>
+<style>
+:root{--bg:#f4f4f2;--fg:#161616;--muted:#8a8a86;--line:#cfcfca;--veil:rgba(244,244,242,.9);--bad:#e5484d;--ok:#30a46c;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#151515;--fg:#f1f1ee;--muted:#7d7d79;--line:#3a3a38;--veil:rgba(21,21,21,.9);color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#151515;--fg:#f1f1ee;--muted:#7d7d79;--line:#3a3a38;--veil:rgba(21,21,21,.9);color-scheme:dark}
+*,*::before,*::after{box-sizing:inherit}
+html,body{height:100%;margin:0}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden;user-select:none;-webkit-user-select:none}
+#app{height:100%;display:flex;flex-direction:column}
+header{display:flex;justify-content:space-between;align-items:center;padding:14px 20px 10px;font-size:14px}
+header b{font-size:20px;font-weight:600;display:block;line-height:1.1}
+header small{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em}
+.hud{display:flex;gap:28px;align-items:flex-end}
+.lives{display:flex;gap:6px;padding-bottom:4px}
+.lives i{width:12px;height:12px;border-radius:50%;background:var(--fg);transition:opacity .3s,transform .3s}
+.lives i.off{opacity:.15;transform:scale(.6)}
+#barwrap{height:3px;margin:0 20px;background:var(--line);border-radius:2px;overflow:hidden}
+#bar{height:100%;background:var(--fg);transform-origin:left;opacity:0}
+#stage{flex:1;min-height:0;position:relative;touch-action:none;cursor:grab}
+#stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#hint{text-align:center;color:var(--muted);font-size:13px;padding:0 16px 4px}
+.axis{display:flex;justify-content:space-between;padding:6px 20px 0;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+#tl{position:relative;display:flex;align-items:center;overflow-x:auto;padding:10px 16px 18px;scrollbar-width:thin;min-height:106px}
+#tl::before,#tl::after{content:"";margin:auto}
+.card{flex:none;width:58px;height:78px;margin:0 4px;border-radius:12px;outline:2px solid transparent;outline-offset:2px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px;font-size:11px;font-weight:600;font-variant-numeric:tabular-nums}
+.card.wrong{outline-color:var(--bad)}
+.card.right{outline-color:var(--ok)}
+.gap{flex:none;width:0;height:78px;position:relative}
+.gap::after{content:"";position:absolute;inset:0 4px;border:2px dashed var(--fg);border-radius:12px;opacity:.45}
+.float{position:fixed;left:0;top:0;z-index:4;pointer-events:none;box-shadow:0 12px 32px rgba(0,0,0,.28)}
+#ov{position:fixed;inset:0;background:var(--veil);display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;z-index:5;backdrop-filter:blur(6px)}
+#ov>div{max-width:380px}
+#ov h1{font-size:40px;font-weight:600;margin:0 0 12px;letter-spacing:-.02em}
+#ov p{color:var(--muted);line-height:1.5;margin:0 0 24px;font-size:15px}
+.btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+#ov button{font:inherit;font-size:15px;background:var(--fg);color:var(--bg);border:0;border-radius:999px;padding:12px 26px;cursor:pointer}
+.row{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.row span{width:100px;text-align:right;margin-right:4px}
+#ov .seg{background:transparent;color:var(--fg);outline:1.5px solid var(--line);outline-offset:-1.5px;padding:8px 16px;font-size:14px}
+#ov .seg.on{background:var(--fg);color:var(--bg);outline-color:var(--fg)}
+#ov #go{margin-top:12px}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div><small>Nível</small><b id="lvl">1</b></div>
+    <div class="hud">
+      <div><small>Sequência</small><b id="str">0</b></div>
+      <div><small>Pontos</small><b id="sc">0</b></div>
+      <div class="lives" id="lv"><i></i><i></i><i></i></div>
+    </div>
+  </header>
+  <div id="barwrap"><div id="bar"></div></div>
+  <div id="stage"></div>
+  <div id="hint">Arraste a cor até o lugar certo · compare a luminosidade, não o matiz</div>
+  <div class="axis"><span>← mais escura</span><span>mais clara →</span></div>
+  <div id="tl"></div>
+</div>
+<div id="ov"><div>
+  <h1 id="ovt">Tons</h1>
+  <p id="ovp">Arraste a cor nova até a linha do tempo e solte no lugar certo, da mais escura (esquerda) para a mais clara (direita). No fácil todas as cores têm o mesmo matiz; no difícil o matiz varia, mas vale só a luminosidade. Você tem 3 vidas e as diferenças ficam cada vez menores.</p>
+  <div class="row"><span>Dificuldade</span><button class="seg on" data-k="diff" data-v="0">Fácil</button><button class="seg" data-k="diff" data-v="1">Difícil</button></div>
+  <div class="row"><span>Tempo</span><button class="seg on" data-k="mode" data-v="0">Clássico</button><button class="seg" data-k="mode" data-v="1">Contra o tempo</button></div>
+  <button id="go">Começar</button>
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+const $ = s => document.querySelector(s);
+const S = {hue:0, cards:[], cur:null, lives:3, score:0, streak:0, correct:0, best:[0,0,0,0], mode:0, diff:0, busy:true, id:0, drag:null, tw:null};
+try { S.best = [0,1,2,3].map(m => +localStorage.getItem("tons2-best-" + m) || 0); } catch (e) {}
+const tl = $("#tl"), bar = $("#bar");
+
+/* ---------- Cor (OKLCH, luminosidade perceptual) ---------- */
+const enc = v => { v = Math.min(1, Math.max(0, v)); return Math.round(255 * (v <= .0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1/2.4) - .055)); };
+function makeColor(L, C, H) {
+  const hr = H * Math.PI / 180;
+  for (let c = C; ; c = Math.max(0, c - .005)) {
+    const a = c * Math.cos(hr), b = c * Math.sin(hr);
+    const l = Math.pow(L + .3963377774*a + .2158037573*b, 3), m = Math.pow(L - .1055613458*a - .0638541728*b, 3), s = Math.pow(L - .0894841775*a - 1.291485548*b, 3);
+    const rgb = [4.0767416621*l - 3.3077115913*m + .2309699292*s, -1.2684380046*l + 2.6097574011*m - .3413193965*s, -.0041960863*l - .7034186147*m + 1.707614701*s];
+    if (c <= 0 || rgb.every(v => v >= -.001 && v <= 1.001)) {
+      const [r, g, bl] = rgb.map(enc);
+      return {l:L, rgb:[r, g, bl], css:`rgb(${r},${g},${bl})`};
+    }
+  }
+}
+const randColor = L => S.diff ? makeColor(L, .07 + Math.random() * .09, (S.hue + Math.random() * 150 - 75 + 360) % 360) : makeColor(L, .12, S.hue);
+
+/* ---------- Three.js ---------- */
+const stage = $("#stage");
+const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+stage.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(40, 1, .1, 50);
+camera.position.z = 8;
+const VISH = 2 * Math.tan(THREE.MathUtils.degToRad(20)) * 8;
+
+function roundedRect(w, h, r) {
+  const s = new THREE.Shape(), x = -w/2, y = -h/2;
+  s.moveTo(x+r, y); s.lineTo(x+w-r, y); s.quadraticCurveTo(x+w, y, x+w, y+r);
+  s.lineTo(x+w, y+h-r); s.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+  s.lineTo(x+r, y+h); s.quadraticCurveTo(x, y+h, x, y+h-r);
+  s.lineTo(x, y+r); s.quadraticCurveTo(x, y, x+r, y);
+  return new THREE.ShapeGeometry(s, 12);
+}
+const geo = roundedRect(2.6, 2.6, .35);
+const cardMat = new THREE.MeshBasicMaterial({color:0x888888});
+const shadow = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({color:0x000000, transparent:true, opacity:.12}));
+shadow.position.set(0, -.18, -.1);
+const group = new THREE.Group();
+group.add(shadow, new THREE.Mesh(geo, cardMat));
+scene.add(group);
+
+const dp = new Float32Array(90 * 3);
+for (let i = 0; i < dp.length; i += 3) { dp[i] = (Math.random()-.5)*14; dp[i+1] = (Math.random()-.5)*8; dp[i+2] = (Math.random()-.5)*4 - 1; }
+const dg = new THREE.BufferGeometry();
+dg.setAttribute("position", new THREE.BufferAttribute(dp, 3));
+const dust = new THREE.Points(dg, new THREE.PointsMaterial({color:0x888888, size:.035, transparent:true, opacity:.5}));
+scene.add(dust);
+
+let base = 1;
+function resize() {
+  const w = stage.clientWidth, h = stage.clientHeight;
+  if (!w || !h) return;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h; camera.updateProjectionMatrix();
+  base = Math.min(1.15, VISH / 3.4, VISH * camera.aspect / 3.4);
+  if (!gsap.isTweening(group.scale)) group.scale.setScalar(base);
+}
+new ResizeObserver(resize).observe(stage);
+renderer.setAnimationLoop(() => { dust.rotation.y += .0007; renderer.render(scene, camera); });
+gsap.to(group.position, {y:.12, duration:2, yoyo:true, repeat:-1, ease:"sine.inOut"});
+stage.addEventListener("pointermove", e => {
+  if (S.drag) return;
+  const r = stage.getBoundingClientRect();
+  gsap.to(group.rotation, {y:((e.clientX-r.left)/r.width-.5)*.5, x:((e.clientY-r.top)/r.height-.5)*.5, duration:.6});
+});
+
+function cardRect() {
+  const r = stage.getBoundingClientRect(), px = r.height / VISH;
+  return {cx:r.left + r.width/2, cy:r.top + r.height/2 - group.position.y * px, size:2.6 * base * px};
+}
+function burst(color) {
+  const n = 36, pos = new Float32Array(n*3), vel = [];
+  for (let i = 0; i < n; i++) { const a = Math.random()*6.283, sp = 1.2 + Math.random()*2.4; vel.push([Math.cos(a)*sp, Math.sin(a)*sp]); }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+  const m = new THREE.PointsMaterial({color, size:.13, transparent:true});
+  const p = new THREE.Points(g, m); scene.add(p);
+  const o = {t:0};
+  gsap.to(o, {t:1, duration:.9, ease:"power2.out",
+    onUpdate() { for (let i = 0; i < n; i++) { pos[i*3] = vel[i][0]*o.t; pos[i*3+1] = vel[i][1]*o.t; } g.attributes.position.needsUpdate = true; m.opacity = 1 - o.t; },
+    onComplete() { scene.remove(p); g.dispose(); m.dispose(); }});
+}
+
+/* ---------- Jogo ---------- */
+function pickL(gap) {
+  for (let g = gap; g > .004; g *= .8) {
+    for (let t = 0; t < 300; t++) {
+      let l;
+      if (Math.random() < .3) l = .14 + Math.random() * .8;
+      else { const c = S.cards[Math.floor(Math.random() * S.cards.length)]; l = c.l + (Math.random() < .5 ? -1 : 1) * (g + Math.random() * g); }
+      if (l >= .14 && l <= .94 && S.cards.every(c => Math.abs(c.l - l) >= g)) return l;
+    }
+  }
+  return .14 + Math.random() * .8;
+}
+
+function newRound() {
+  S.cur = randColor(pickL(Math.max(.015, .14 * Math.pow(.9, S.correct))));
+  cardMat.color.setRGB(S.cur.rgb[0]/255, S.cur.rgb[1]/255, S.cur.rgb[2]/255);
+  group.visible = true;
+  gsap.fromTo(group.scale, {x:0, y:0, z:0}, {x:base, y:base, z:base, duration:.55, ease:"back.out(2)"});
+  gsap.fromTo(group.rotation, {z:-.5}, {z:0, duration:.55, ease:"power3.out"});
+  S.busy = false;
+  startTimer();
+}
+
+function startTimer() {
+  if (S.mode !== 1) { gsap.set(bar, {opacity:0}); return; }
+  gsap.set(bar, {opacity:1, scaleX:1});
+  S.tw = gsap.to(bar, {scaleX:0, duration:Math.max(6, 15 - S.correct * .25), ease:"none", onComplete:timeout});
+}
+const stopTimer = () => S.tw && S.tw.kill();
+
+/* Linha do tempo */
+let gapEl = null, gapIdx = -1;
+function render() {
+  const old = {};
+  tl.querySelectorAll(".card").forEach(e => old[e.dataset.id] = e.getBoundingClientRect().left);
+  tl.innerHTML = ""; gapEl = null; gapIdx = -1;
+  S.cards.forEach(c => {
+    const d = document.createElement("div");
+    d.className = "card" + (c.res ? " " + c.res : "");
+    d.dataset.id = c.id; d.style.background = c.css; d.style.color = c.l > .62 ? "#161616" : "#fff";
+    d.textContent = (c.l * 100).toFixed(1);
+    tl.appendChild(d);
+  });
+  tl.querySelectorAll(".card").forEach(e => {
+    const id = e.dataset.id;
+    if (id in old) gsap.from(e, {x:old[id] - e.getBoundingClientRect().left, duration:.5, ease:"power3.out"});
+    else {
+      gsap.from(e, {scale:0, duration:.5, ease:"back.out(2)"});
+      tl.scrollTo({left:e.offsetLeft - tl.clientWidth/2 + e.offsetWidth/2, behavior:"smooth"});
+    }
+  });
+}
+
+function setGap(i) {
+  if (i === gapIdx) return;
+  if (gapEl) { const o = gapEl; gsap.to(o, {width:0, duration:.2, onComplete:() => o.remove()}); gapEl = null; }
+  gapIdx = i;
+  if (i >= 0) {
+    gapEl = document.createElement("div"); gapEl.className = "gap";
+    tl.insertBefore(gapEl, tl.querySelectorAll(".card")[i] || null);
+    gsap.to(gapEl, {width:66, duration:.2});
+  }
+}
+function updateGap() {
+  const d = S.drag; if (!d) return;
+  if (d.pos.y < tl.getBoundingClientRect().top - 50) { setGap(-1); return; }
+  let idx = 0, off = 0, k = 0;
+  for (const el of tl.children) {
+    if (el.classList.contains("gap")) off += el.offsetWidth;
+    else if (el.classList.contains("card")) { if (el.getBoundingClientRect().left - off + 29 < d.pos.x) idx = k + 1; k++; }
+  }
+  setGap(idx);
+}
+
+/* Arrastar */
+function startDrag(e) {
+  const cr = cardRect(), el = document.createElement("div");
+  el.className = "float"; el.style.background = S.cur.css;
+  document.body.appendChild(el);
+  gsap.set(el, {width:cr.size, height:cr.size, x:cr.cx, y:cr.cy, xPercent:-50, yPercent:-50, borderRadius:cr.size * .13});
+  group.visible = false;
+  gsap.to(el, {width:58, height:78, borderRadius:12, duration:.35, ease:"power3.out"});
+  S.drag = {el, pos:{x:e.clientX, y:e.clientY - 30}, raf:0};
+  moveDrag(e);
+  tick();
+}
+function moveDrag(e) {
+  const d = S.drag; d.pos = {x:e.clientX, y:e.clientY - 30};
+  gsap.to(d.el, {x:d.pos.x, y:d.pos.y, duration:.12, ease:"power2.out", overwrite:"auto"});
+}
+function tick() {
+  const d = S.drag; if (!d) return;
+  const r = tl.getBoundingClientRect();
+  if (d.pos.y > r.top - 50) { if (d.pos.x < r.left + 70) tl.scrollLeft -= 10; else if (d.pos.x > r.right - 70) tl.scrollLeft += 10; }
+  updateGap();
+  d.raf = requestAnimationFrame(tick);
+}
+function endDrag(cancel) {
+  const d = S.drag; if (!d) return;
+  cancelAnimationFrame(d.raf); S.drag = null;
+  if (!cancel && gapIdx >= 0 && gapEl) {
+    const idx = gapIdx, g = gapEl.getBoundingClientRect();
+    S.busy = true; stopTimer();
+    gsap.to(d.el, {x:g.left + 33, y:g.top + g.height/2, width:58, height:78, duration:.2, ease:"power2.out", overwrite:"auto",
+      onComplete() { d.el.remove(); resolve(idx); }});
+  } else {
+    setGap(-1);
+    const cr = cardRect();
+    gsap.to(d.el, {x:cr.cx, y:cr.cy, width:cr.size, height:cr.size, borderRadius:cr.size * .13, duration:.35, ease:"power3.out", overwrite:"auto",
+      onComplete() { d.el.remove(); group.visible = true; }});
+  }
+}
+stage.addEventListener("pointerdown", e => { if (!S.busy && !S.drag) startDrag(e); });
+window.addEventListener("pointermove", e => { if (S.drag) moveDrag(e); });
+window.addEventListener("pointerup", () => endDrag(false));
+window.addEventListener("pointercancel", () => endDrag(true));
+
+function timeout() {
+  if (S.busy) return;
+  if (S.drag) { const d = S.drag; cancelAnimationFrame(d.raf); S.drag = null; d.el.remove(); setGap(-1); }
+  resolve(null);
+}
+
+function hud() {
+  $("#sc").textContent = S.score;
+  $("#str").textContent = S.streak;
+  $("#lvl").textContent = S.correct + 1;
+  [...$("#lv").children].forEach((e, i) => e.classList.toggle("off", i >= S.lives));
+}
+
+function resolve(idx) {
+  S.busy = true; stopTimer();
+  const k = S.cards.filter(c => c.l < S.cur.l).length, ok = idx === k;
+  S.cards.splice(k, 0, {id:++S.id, ...S.cur, res:ok ? "right" : "wrong"});
+  if (ok) { S.correct++; S.streak++; S.score += 10 * S.streak; burst(0x30a46c); }
+  else {
+    S.lives--; S.streak = 0; burst(0xe5484d);
+    gsap.fromTo(group.position, {x:-.2}, {x:0, duration:.6, ease:"elastic.out(1,.25)"});
+  }
+  hud(); render();
+  if (group.visible) gsap.to(group.scale, {x:0, y:0, z:0, duration:.3, delay:.5, ease:"power2.in"});
+  setTimeout(() => {
+    S.cards.forEach(c => c.res = "");
+    document.querySelectorAll(".card").forEach(e => e.classList.remove("right", "wrong"));
+    if (S.lives <= 0) end(); else newRound();
+  }, 1100);
+}
+
+function end() {
+  gsap.set(bar, {opacity:0});
+  const bk = S.diff * 2 + S.mode;
+  if (S.score > S.best[bk]) { S.best[bk] = S.score; try { localStorage.setItem("tons2-best-" + bk, S.score); } catch (e) {} }
+  $("#ovt").textContent = "Fim de jogo";
+  $("#ovp").textContent = `Pontos: ${S.score} · Recorde (${S.diff ? "difícil" : "fácil"}, ${S.mode ? "contra o tempo" : "clássico"}): ${S.best[bk]} · Cores colocadas: ${S.correct}`;
+  const ov = $("#ov"); ov.style.display = "flex";
+  gsap.fromTo(ov, {opacity:0}, {opacity:1, duration:.4});
+}
+
+function start() {
+  Object.assign(S, {hue:Math.floor(Math.random() * 360), lives:3, score:0, streak:0, correct:0, id:1, busy:true});
+  S.cards = [{id:1, ...randColor(.35 + Math.random() * .4), res:""}];
+  hud(); render();
+  const ov = $("#ov");
+  gsap.to(ov, {opacity:0, duration:.3, onComplete() { ov.style.display = "none"; newRound(); }});
+}
+document.querySelectorAll(".seg").forEach(b => b.onclick = () => {
+  const k = b.dataset.k; S[k] = +b.dataset.v;
+  document.querySelectorAll(`.seg[data-k="${k}"]`).forEach(x => x.classList.toggle("on", x === b));
+});
+$("#go").onclick = () => start();
+hud();
+</script>
+</body>
+</html>
