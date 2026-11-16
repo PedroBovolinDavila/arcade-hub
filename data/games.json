@@ -16,10 +16,11 @@
   "name": "Tons",
   "description": "Uma cor aparece e você a arrasta até o lugar certo na linha do tempo, da mais escura para a mais clara. Os tons ficam cada vez mais parecidos.",
   "shortDescription": "Ordene cores pela luminosidade.",
-  "status": "available",
-  "number": "00",
+  "status": "DISPONÍVEL",
+  "number": "002",
   "path": "games/tons/index.html",
   "kind": "puzzle",
-  "players": "1"
+  "players": "1",
+    "cover": null
   }
 ]
