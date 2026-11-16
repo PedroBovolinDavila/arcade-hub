@@ -1,4 +1,4 @@
-const CACHE_NAME = 'arcade-hub-v3';
+const CACHE_NAME = 'arcade-hub-v4';
 const APP_SHELL = [
   './',
   './index.html',
@@ -8,6 +8,7 @@ const APP_SHELL = [
   './assets/ui/salon-icon.svg',
   './data/games.json',
   './games/coringa/index.html',
+  './games/tons/index.html',
 ];
 
 self.addEventListener('install', event => {
