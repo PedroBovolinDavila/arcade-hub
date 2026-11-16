@@ -1,4 +1,4 @@
-const CACHE_NAME = 'arcade-hub-v2';
+const CACHE_NAME = 'arcade-hub-v3';
 const APP_SHELL = [
   './',
   './index.html',
